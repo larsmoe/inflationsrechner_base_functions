@@ -56,22 +56,23 @@ var VPIamtlich = calcVPIamtlich(csvData, officialWeights);
 // Inflationsraten der Güterkategorien berechnen ((VPI_heute(i)/VPI_vor1Jahr(i))-1)
 function calcChange(data){
     var VPIs = [];
+    // Spalte 0 und 1 sind Monat und allgemeiner VPI
     for(let i = 2; i < data[0].length; i++){
-        VPIs[i-2] = (data[data.length-1][i]/data[data.length-14][i]-1).toFixed(4);
+        VPIs[i-2] = ((data[data.length-1][i]/data[data.length-13][i])-1).toFixed(4);
     };
     return(VPIs);
 };
 
-// amtliche Inflationsrate berechnen
+// amtliche Inflationsrate berechnen (aus Gewichten und VPIs)
 function calcVPIamtlich(data, weight){
     console.log(weight);
     console.log(data[data.length-1]);
-    console.log(data[data.length-14]);
+    console.log(data[data.length-13]);
     var VPIsumAkt = 0;
     var VPIsumAlt = 0;
-    for(let i = 2; i < weight.length; i++){
-        VPIsumAkt += data[data.length-1][i]*weight[i-2];
-        VPIsumAlt += data[data.length-14][i]*weight[i-2];
+    for(let i = 2; i < data[0].length; i++){
+        VPIsumAkt = VPIsumAkt + (data[data.length-1][i]*weight[i-2]);
+        VPIsumAlt = VPIsumAlt + (data[data.length-13][i]*weight[i-2]);
     }
     VPIamtlich = (VPIsumAkt/VPIsumAlt)-1;
     return((VPIamtlich).toFixed(4));
@@ -100,3 +101,4 @@ function Erklaerkomponenten(){
         document.getElementById('EinflussInflation').innerHTML = faktor2;
         document.getElementById('EinflussGesamt').innerHTML = gesamtEinfluss;
 }
+
