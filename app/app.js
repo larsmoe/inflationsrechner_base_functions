@@ -53,6 +53,12 @@ var VPIs = calcChange(csvData);
 // amtliche Inflationsrate
 var VPIamtlich = calcVPIamtlich(csvData, officialWeights);
 
+// Array mit Einflüssen
+var Einfluss = Erklaerkomponenten().map(Number);
+
+// Array mit Index der jeweils 2 stärksten positiven und negativen Einflüssen
+var highestImpact= getInfluencingCategories(Einfluss);
+
 // Inflationsraten der Güterkategorien berechnen ((VPI_heute(i)/VPI_vor1Jahr(i))-1)
 function calcChange(data){
     var VPIs = [];
@@ -65,9 +71,6 @@ function calcChange(data){
 
 // amtliche Inflationsrate berechnen (aus Gewichten und VPIs)
 function calcVPIamtlich(data, weight){
-    console.log(weight);
-    console.log(data[data.length-1]);
-    console.log(data[data.length-13]);
     var VPIsumAkt = 0;
     var VPIsumAlt = 0;
     for(let i = 2; i < data[0].length; i++){
@@ -76,6 +79,25 @@ function calcVPIamtlich(data, weight){
     }
     VPIamtlich = (VPIsumAkt/VPIsumAlt)-1;
     return((VPIamtlich).toFixed(4));
+};
+
+// Kategorien mit den 2 stärksten positiven und negativen Einflüssen
+function getInfluencingCategories(array){
+    var positiveImpact = [];
+    var negativeImpact = [];
+    var temparray = array;
+
+    // i < 2 -> nur jeweils 2 Kategorien
+    for(let i = 0; i < 2; i++){
+        // Index der Kategorie mit dem größten positiven Einfluss
+        positiveImpact[i] = array.indexOf(Math.max.apply(null, temparray));
+        // Index der Kategorie mit dem größten negativen Einfluss
+        negativeImpact[i] = array.indexOf(Math.min.apply(null, temparray));
+        // Extremwerte im Array auf 0 setzen
+        temparray[array.indexOf(Math.max.apply(null, temparray))] = 0;
+        temparray[array.indexOf(Math.min.apply(null, temparray))] = 0;
+        };
+    return[positiveImpact, negativeImpact];
 };
 
 // Werte anzeigen
@@ -87,6 +109,8 @@ function myFunction() {
     document.getElementById('Inflationsraten').innerHTML = VPIs;
 };
 
+
+
 // Erklärkomponente berechnen
 function Erklaerkomponenten(){
         faktor1 = [];
@@ -97,8 +121,14 @@ function Erklaerkomponenten(){
                 faktor2[i] = (VPIs[i]-VPIamtlich).toFixed(4);
                 gesamtEinfluss[i] = (faktor1[i]*faktor2[i]).toFixed(4);
         };
-        document.getElementById('EinflussGewichte').innerHTML = faktor1;
-        document.getElementById('EinflussInflation').innerHTML = faktor2;
-        document.getElementById('EinflussGesamt').innerHTML = gesamtEinfluss;
-}
+        return(gesamtEinfluss);
+};
+
+function myfunction2(){
+    document.getElementById('EinflussGesamt').innerHTML = gesamtEinfluss;
+    document.getElementById('posImpact').innerHTML = highestImpact[0];
+    document.getElementById('negImpact').innerHTML = highestImpact[1];
+};
+
+
 
