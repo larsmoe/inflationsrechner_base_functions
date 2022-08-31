@@ -44,20 +44,35 @@ var csvData = [
 ];
 
 // persönliche Gewichte des Warenkorbs (berechnet aus Eingaben des Nutzers)
+// persönliche Inflationsrate ist größer als amtliche
 var personalWeights = [98.85, 14.96, 31.77, 190.32, 30.77, 12.54, 26.92, 68.7, 41.56,
     13.69, 25.41, 28.62, 45.34, 27.22, 19.98, 22.88, 40.13, 26.81, 233.53];
+// persönliche Inflationsrate ist niedriger als amtliche
+// var personalWeights = [0.85, 300.96, 30.77, 150.32, 20.77, 12.54, 23.92, 68.7, 41.56,
+//    13.69, 25.41, 28.62, 30.34, 27.22, 19.98, 22.88, 20.13, 18.81, 233.53];
+// persönliche Gewichte sind gleich der amtlichen
+// var personalWeights = officialWeights;
 
 // Inflationsraten der Güterkategorien
 var VPIs = calcChange(csvData);
 
 // amtliche Inflationsrate
-var VPIamtlich = calcVPIamtlich(csvData, officialWeights);
+var VPIamtlich = calcVPI(csvData, officialWeights);
+console.log(VPIamtlich);
 
 // Array mit Einflüssen
 var Einfluss = Erklaerkomponenten().map(Number);
 
 // Array mit Index der jeweils 2 stärksten positiven und negativen Einflüssen
 var highestImpact= getInfluencingCategories(Einfluss);
+
+// persönliche Inflationsrate
+var VPIpersoenlich = calcVPI(csvData, personalWeights);
+console.log(VPIpersoenlich);
+
+// Erklärtext generieren
+const erklaertext = ErklaertexteGenerieren(VPIamtlich, VPIpersoenlich, highestImpact);
+console.log(erklaertext);
 
 // Inflationsraten der Güterkategorien berechnen ((VPI_heute(i)/VPI_vor1Jahr(i))-1)
 function calcChange(data){
@@ -70,15 +85,15 @@ function calcChange(data){
 };
 
 // amtliche Inflationsrate berechnen (aus Gewichten und VPIs)
-function calcVPIamtlich(data, weight){
+function calcVPI(data, weight){
     var VPIsumAkt = 0;
     var VPIsumAlt = 0;
     for(let i = 2; i < data[0].length; i++){
         VPIsumAkt = VPIsumAkt + (data[data.length-1][i]*weight[i-2]);
         VPIsumAlt = VPIsumAlt + (data[data.length-13][i]*weight[i-2]);
     }
-    VPIamtlich = (VPIsumAkt/VPIsumAlt)-1;
-    return((VPIamtlich).toFixed(4));
+    VPI = (VPIsumAkt/VPIsumAlt)-1;
+    return((VPI).toFixed(4));
 };
 
 // Kategorien mit den 2 stärksten positiven und negativen Einflüssen
@@ -100,16 +115,40 @@ function getInfluencingCategories(array){
     return[positiveImpact, negativeImpact];
 };
 
+// Generierung der Erklärtexte
+function ErklaertexteGenerieren(amtlInfl, persInfl, impact){
+    var textbausteine = [];
+    if (amtlInfl > persInfl) {
+        textbausteine[0] = 'niedriger als die';
+        textbausteine[1] = impact[1][0];
+        textbausteine[2] = impact[1][1];
+        textbausteine[3] = impact[0][0];
+    } else if(amtlInfl < persInfl) {
+        textbausteine[0] = 'groesser als die';
+        textbausteine[1] = impact[0][0];
+        textbausteine[2] = impact[0][1];
+        textbausteine[3] = impact[1][0];
+    } else {
+        textbausteine[0] = 'gleich der';
+        textbausteine[1] = impact[1][0];
+        textbausteine[2] = impact[1][1];
+        textbausteine[3] = impact[0][0];
+    }
+    const text ='Ihre persoenliche Inflationsrate ist ' + textbausteine[0] + ' vom Statistischen Bundesamt ausgewiesene Inflationsrate. Insbesondere Ihre Ausgaben fuer '+ weightMapping[textbausteine[1]][2] + ', '+ weightMapping[textbausteine[2]][2]+ ' und '+ weightMapping[textbausteine[3]][2]+ ' fuehren zu Abweichungen.';
+    console.log(textbausteine[1]);
+    console.log(weightMapping[textbausteine[1]][2]);
+    return(text);
+};
+
 // Werte anzeigen
 function myFunction() {
     // document.getElementById('demo').innerHTML = Date()
     document.getElementById('offizielleGewichte').innerHTML = officialWeights;
     document.getElementById('persönlicheGewichte').innerHTML = personalWeights;
     document.getElementById('allgemeineInflationsrate').innerHTML = VPIamtlich;
+    document.getElementById('persoenlicheInflationsrate').innerHTML = VPIpersoenlich;
     document.getElementById('Inflationsraten').innerHTML = VPIs;
 };
-
-
 
 // Erklärkomponente berechnen
 function Erklaerkomponenten(){
@@ -128,6 +167,7 @@ function myfunction2(){
     document.getElementById('EinflussGesamt').innerHTML = gesamtEinfluss;
     document.getElementById('posImpact').innerHTML = highestImpact[0];
     document.getElementById('negImpact').innerHTML = highestImpact[1];
+    document.getElementById('text').innerHTML = erklaertext;
 };
 
 
