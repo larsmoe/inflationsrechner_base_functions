@@ -173,6 +173,48 @@ function myfunction2(){
     document.getElementById('text').innerHTML = erklaertext[0];
     document.getElementById('text2').innerHTML = erklaertext[1];
 };
+var adj_btn_inc_dec = 10;
+var incButtons = document.getElementsByClassName('inc-adj-btn');
+var decButtons = document.getElementsByClassName('dec-adj-btn');
+
+ for (var i = 0; i < incButtons.length; i++) {
+        var button = incButtons[i];
+        button.addEventListener('click', function (event) {
+            var buttonClicked = event.target;
+            var input_field = buttonClicked.parentElement.children[1];
+            var inputValue = input_field.value;
+            var newValue = parseInt(inputValue) + adj_btn_inc_dec;
+            if (isNaN(parseInt(inputValue))) {
+                alert('Bitte geben Sie eine Nummer ein')
+                input_field.value = 0;
+            } else{
+              input_field.value = newValue;
+            }
+
+        });
+    }
+
+    for (var i = 0; i < decButtons.length; i++) {
+        var button = decButtons[i];
+        button.addEventListener('click', function (event) {
+            var buttonClicked = event.target;
+            var input_field = buttonClicked.parentElement.children[1];
+            var inputValue = input_field.value;
+            var newValue = parseInt(inputValue) - adj_btn_inc_dec;
+            if (isNaN(parseInt(inputValue))) {
+                input_field.value = 0;
+            } else {
+                if (newValue >= 0) {
+                    input_field.value = newValue;
+                }
+                else {
+                input_field.value = 0;
+                }
+
+            }
+
+        });
+    }
 
 
 
