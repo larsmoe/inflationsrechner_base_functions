@@ -123,21 +123,24 @@ function ErklaertexteGenerieren(amtlInfl, persInfl, impact){
         textbausteine[1] = impact[1][0];
         textbausteine[2] = impact[1][1];
         textbausteine[3] = impact[0][0];
+        textbausteine[4] = 'unten';
+        textbausteine[5] = 'oben';
     } else if(amtlInfl < persInfl) {
         textbausteine[0] = 'groesser als die';
         textbausteine[1] = impact[0][0];
         textbausteine[2] = impact[0][1];
         textbausteine[3] = impact[1][0];
+        textbausteine[4] = 'oben';
+        textbausteine[5] = 'unten';
     } else {
         textbausteine[0] = 'gleich der';
         textbausteine[1] = impact[1][0];
         textbausteine[2] = impact[1][1];
         textbausteine[3] = impact[0][0];
     }
-    const text ='Ihre persoenliche Inflationsrate ist ' + textbausteine[0] + ' vom Statistischen Bundesamt ausgewiesene Inflationsrate. Insbesondere Ihre Ausgaben fuer '+ weightMapping[textbausteine[1]][2] + ', '+ weightMapping[textbausteine[2]][2]+ ' und '+ weightMapping[textbausteine[3]][2]+ ' fuehren zu Abweichungen.';
-    console.log(textbausteine[1]);
-    console.log(weightMapping[textbausteine[1]][2]);
-    return(text);
+    const text = 'Ihre persoenliche Inflationsrate ist ' + textbausteine[0] + ' vom Statistischen Bundesamt ausgewiesene Inflationsrate. Insbesondere Ihre Ausgaben fuer '+ weightMapping[textbausteine[1]][2] + ', '+ weightMapping[textbausteine[2]][2]+ ' und '+ weightMapping[textbausteine[3]][2]+ ' fuehren zu Abweichungen.';
+    const text2 = 'Insbesondere Ihre Ausgaben fuer '+weightMapping[textbausteine[1]][2] + ' und '+weightMapping[textbausteine[2]][2] + ' fuehren zu Abweichungen nach '+textbausteine[4] + '. Zu Abweichungen nach '+textbausteine[5] + ' fuehren Ihre Ausgaben fuer '+weightMapping[textbausteine[3]][2] + '.';
+    return([text, text2]);
 };
 
 // Werte anzeigen
@@ -167,7 +170,8 @@ function myfunction2(){
     document.getElementById('EinflussGesamt').innerHTML = gesamtEinfluss;
     document.getElementById('posImpact').innerHTML = highestImpact[0];
     document.getElementById('negImpact').innerHTML = highestImpact[1];
-    document.getElementById('text').innerHTML = erklaertext;
+    document.getElementById('text').innerHTML = erklaertext[0];
+    document.getElementById('text2').innerHTML = erklaertext[1];
 };
 
 
