@@ -43,13 +43,20 @@ var csvData = [
     [90, 117.4, 126.5, 109.7, 124, 110.3, 142.1, 187, 135.7, 137.5, 122.1, 76.1, 111.6, 127.4, 106.3, 94, 94.6, 115.3, 107.2, 132.8, 115.8]
 ];
 
+var gesamtAusgaben = 1650;
 // persönliche Gewichte des Warenkorbs (berechnet aus Eingaben des Nutzers)
 // persönliche Inflationsrate ist größer als amtliche
-var personalWeights = [98.85, 14.96, 31.77, 190.32, 30.77, 12.54, 26.92, 68.7, 41.56,
+ var personalWeights = [98.85, 14.96, 31.77, 190.32, 30.77, 12.54, 26.92, 68.7, 41.56,
     13.69, 25.41, 28.62, 45.34, 27.22, 19.98, 22.88, 40.13, 26.81, 233.53];
 // persönliche Inflationsrate ist niedriger als amtliche
 // var personalWeights = [0.85, 300.96, 30.77, 150.32, 20.77, 12.54, 23.92, 68.7, 41.56,
 //    13.69, 25.41, 28.62, 30.34, 27.22, 19.98, 22.88, 20.13, 18.81, 233.53];
+
+var ausgaben = [];
+for(let i = 0; i < personalWeights.length; i++){
+    ausgaben[i] = ((personalWeights[i]/1000)*gesamtAusgaben).toFixed(0);
+}
+
 // persönliche Gewichte sind gleich der amtlichen
 // var personalWeights = officialWeights;
 
@@ -58,7 +65,9 @@ var VPIs = calcChange(csvData);
 
 // amtliche Inflationsrate
 var VPIamtlich = calcVPI(csvData, officialWeights);
-console.log(VPIamtlich);
+
+// persönliche Inflationsrate
+var VPIpersoenlich = calcVPI(csvData, personalWeights);
 
 // Array mit Einflüssen
 var Einfluss = Erklaerkomponenten().map(Number);
@@ -66,25 +75,20 @@ var Einfluss = Erklaerkomponenten().map(Number);
 // Array mit Index der jeweils 2 stärksten positiven und negativen Einflüssen
 var highestImpact= getInfluencingCategories(Einfluss);
 
-// persönliche Inflationsrate
-var VPIpersoenlich = calcVPI(csvData, personalWeights);
-console.log(VPIpersoenlich);
-
 // Erklärtext generieren
 const erklaertext = ErklaertexteGenerieren(VPIamtlich, VPIpersoenlich, highestImpact);
 console.log(erklaertext);
-
 // Inflationsraten der Güterkategorien berechnen ((VPI_heute(i)/VPI_vor1Jahr(i))-1)
 function calcChange(data){
     var VPIs = [];
     // Spalte 0 und 1 sind Monat und allgemeiner VPI
     for(let i = 2; i < data[0].length; i++){
-        VPIs[i-2] = ((data[data.length-1][i]/data[data.length-13][i])-1).toFixed(4);
+        VPIs[i-2] = (((data[data.length-1][i]/data[data.length-13][i])-1)*100).toFixed(1);
     };
     return(VPIs);
 };
 
-// amtliche Inflationsrate berechnen (aus Gewichten und VPIs)
+// Inflationsrate berechnen (aus Gewichten und VPIs)
 function calcVPI(data, weight){
     var VPIsumAkt = 0;
     var VPIsumAlt = 0;
@@ -93,7 +97,7 @@ function calcVPI(data, weight){
         VPIsumAlt = VPIsumAlt + (data[data.length-13][i]*weight[i-2]);
     }
     VPI = (VPIsumAkt/VPIsumAlt)-1;
-    return((VPI).toFixed(4));
+    return((VPI*100).toFixed(1));
 };
 
 // Kategorien mit den 2 stärksten positiven und negativen Einflüssen
@@ -140,7 +144,20 @@ function ErklaertexteGenerieren(amtlInfl, persInfl, impact){
     }
     const text = 'Ihre persoenliche Inflationsrate ist ' + textbausteine[0] + ' vom Statistischen Bundesamt ausgewiesene Inflationsrate. Insbesondere Ihre Ausgaben fuer '+ weightMapping[textbausteine[1]][2] + ', '+ weightMapping[textbausteine[2]][2]+ ' und '+ weightMapping[textbausteine[3]][2]+ ' fuehren zu Abweichungen.';
     const text2 = 'Insbesondere Ihre Ausgaben fuer '+weightMapping[textbausteine[1]][2] + ' und '+weightMapping[textbausteine[2]][2] + ' fuehren zu Abweichungen nach '+textbausteine[4] + '. Zu Abweichungen nach '+textbausteine[5] + ' fuehren Ihre Ausgaben fuer '+weightMapping[textbausteine[3]][2] + '.';
-    return([text, text2]);
+    return([text, text2, textbausteine[1], textbausteine[2], textbausteine[3]]);
+};
+
+// Erklärkomponente berechnen
+function Erklaerkomponenten(){
+        faktor1 = [];
+        faktor2 = [];
+        gesamtEinfluss = [];
+        for (let i = 0; i < officialWeights.length; i++) {
+                faktor1[i] = personalWeights[i]-officialWeights[i];
+                faktor2[i] = VPIs[i]-VPIamtlich;
+                gesamtEinfluss[i] = (faktor1[i]*faktor2[i]).toFixed(1);
+        };
+        return(gesamtEinfluss);
 };
 
 // Werte anzeigen
@@ -153,26 +170,43 @@ function myFunction() {
     document.getElementById('Inflationsraten').innerHTML = VPIs;
 };
 
-// Erklärkomponente berechnen
-function Erklaerkomponenten(){
-        faktor1 = [];
-        faktor2 = [];
-        gesamtEinfluss = [];
-        for (let i = 0; i < officialWeights.length; i++) {
-                faktor1[i] = ((personalWeights[i]-officialWeights[i])).toFixed(4);
-                faktor2[i] = (VPIs[i]-VPIamtlich).toFixed(4);
-                gesamtEinfluss[i] = (faktor1[i]*faktor2[i]).toFixed(4);
-        };
-        return(gesamtEinfluss);
-};
-
 function myfunction2(){
     document.getElementById('EinflussGesamt').innerHTML = gesamtEinfluss;
     document.getElementById('posImpact').innerHTML = highestImpact[0];
     document.getElementById('negImpact').innerHTML = highestImpact[1];
     document.getElementById('text').innerHTML = erklaertext[0];
     document.getElementById('text2').innerHTML = erklaertext[1];
+    document.getElementById("adj-cat-1").innerHTML = weightMapping[erklaertext[2]][2];
+    document.getElementById("adj-cat-2").innerHTML = weightMapping[erklaertext[3]][2];
+    document.getElementById("adj-cat-3").innerHTML = weightMapping[erklaertext[4]][2];
+    document.getElementById("adj-input-1").value = ausgaben[erklaertext[2]];
+    document.getElementById("adj-input-2").value = ausgaben[erklaertext[3]];
+    document.getElementById("adj-input-3").value = ausgaben[erklaertext[4]];
 };
+
+function myfunction3(){
+    ausgaben[erklaertext[2]] = document.getElementById("adj-input-1").value;
+    ausgaben[erklaertext[3]] = document.getElementById("adj-input-2").value;
+    ausgaben[erklaertext[4]] = document.getElementById("adj-input-3").value;
+    console.log(ausgaben);
+    newWeights = [];
+    newGesamtAusgaben = 0;
+    newPersonalWeightSum = 0;
+    for(let i = 0; i < ausgaben.length; i++){
+        newGesamtAusgaben = newGesamtAusgaben + parseInt(ausgaben[i]);
+        newPersonalWeightSum = newPersonalWeightSum + parseInt(personalWeights[i]);
+    };
+    // console.log(newGesamtAusgaben);
+    // console.log(newPersonalWeightSum);
+    for(let i = 0; i < ausgaben.length; i++){
+        newWeights[i] = (ausgaben[i]/newGesamtAusgaben)*1000;
+    };
+    // console.log(newWeights);
+    var newVPIpersoenlich = calcVPI(csvData, newWeights);
+
+    document.getElementById('persoenlicheInflationsrate').innerHTML = newVPIpersoenlich;
+}
+
 var adj_btn_inc_dec = 10;
 var incButtons = document.getElementsByClassName('inc-adj-btn');
 var decButtons = document.getElementsByClassName('dec-adj-btn');
