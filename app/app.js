@@ -120,30 +120,41 @@ function getInfluencingCategories(array){
 };
 
 // Generierung der Erklärtexte
-function ErklaertexteGenerieren(amtlInfl, persInfl, impact){
+function ErklaertexteGenerieren(offInfl, persInfl, impact){
     var textbausteine = [];
-    if (amtlInfl > persInfl) {
+    if (Math.round(offInfl*10) > Math.round(persInfl*10)) {
+        //js ist irgendwie nicht der Lage float-Zahlen sinnvoll zu vergleichen deswegen hier dieser Umweg
+        //siehe auch: https://stackoverflow.com/questions/21690070/javascript-float-comparison
         textbausteine[0] = 'niedriger als die';
         textbausteine[1] = impact[1][0];
         textbausteine[2] = impact[1][1];
         textbausteine[3] = impact[0][0];
-        textbausteine[4] = 'unten';
-        textbausteine[5] = 'oben';
+        textbausteine[4] = '<span style="color:green">';
+        textbausteine[5] = '<span style="color:red">';
+        textbausteine[6] = 'unten';
+        textbausteine[7] = 'oben';
     } else if(amtlInfl < persInfl) {
-        textbausteine[0] = 'groesser als die';
+        textbausteine[0] = 'größer als die';
         textbausteine[1] = impact[0][0];
         textbausteine[2] = impact[0][1];
         textbausteine[3] = impact[1][0];
-        textbausteine[4] = 'oben';
-        textbausteine[5] = 'unten';
+        textbausteine[4] = '<span style="color:red">'
+        textbausteine[5] = '<span style="color:green">'
+        textbausteine[6] = 'oben';
+        textbausteine[7] = 'unten';
     } else {
         textbausteine[0] = 'gleich der';
         textbausteine[1] = impact[1][0];
         textbausteine[2] = impact[1][1];
         textbausteine[3] = impact[0][0];
     }
-    const text = 'Ihre persoenliche Inflationsrate ist ' + textbausteine[0] + ' vom Statistischen Bundesamt ausgewiesene Inflationsrate. Insbesondere Ihre Ausgaben fuer '+ weightMapping[textbausteine[1]][2] + ', '+ weightMapping[textbausteine[2]][2]+ ' und '+ weightMapping[textbausteine[3]][2]+ ' fuehren zu Abweichungen.';
-    const text2 = 'Insbesondere Ihre Ausgaben fuer '+weightMapping[textbausteine[1]][2] + ' und '+weightMapping[textbausteine[2]][2] + ' fuehren zu Abweichungen nach '+textbausteine[4] + '. Zu Abweichungen nach '+textbausteine[5] + ' fuehren Ihre Ausgaben fuer '+weightMapping[textbausteine[3]][2] + '.';
+     const text = 'Ihre persönliche Inflationsrate ist ' + textbausteine[0] + ' vom Statistischen Bundesamt ausgewiesene Inflationsrate. ' +
+        'Insbesondere Ihre Ausgaben für '+ weightMapping[textbausteine[1]][2] + ', '+
+        weightMapping[textbausteine[2]][2]+ ' und '+ weightMapping[textbausteine[3]][2]+ ' führen zu Abweichungen.';
+    const text2 = 'Insbesondere Ihre Ausgaben für ' + textbausteine[4] +weightMapping[textbausteine[1]][2] + '</span> und ' +
+        textbausteine[4] +weightMapping[textbausteine[2]][2] + '</span> führen zu Abweichungen nach '+textbausteine[6] + '. ' +
+        'Zu Abweichungen nach '+textbausteine[7] + ' führen Ihre Ausgaben für '+textbausteine[5] +
+        weightMapping[textbausteine[3]][2] + '</span>.';
     return([text, text2, textbausteine[1], textbausteine[2], textbausteine[3]]);
 };
 
@@ -154,6 +165,8 @@ function Erklaerkomponenten(){
         gesamtEinfluss = [];
         for (let i = 0; i < officialWeights.length; i++) {
                 faktor1[i] = personalWeights[i]-officialWeights[i];
+                console.log(VPIs[i])
+                console.log(VPIamtlich)
                 faktor2[i] = VPIs[i]-VPIamtlich;
                 gesamtEinfluss[i] = (faktor1[i]*faktor2[i]).toFixed(1);
         };
@@ -215,6 +228,10 @@ var decButtons = document.getElementsByClassName('dec-adj-btn');
         var button = incButtons[i];
         button.addEventListener('click', function (event) {
             var buttonClicked = event.target;
+            console.log(buttonClicked.getAttribute('id'));
+            if (buttonClicked.getAttribute('id')==='inc-adj-btn-1'){
+                console.log('first plus button clicked')
+            }
             var input_field = buttonClicked.parentElement.children[1];
             var inputValue = input_field.value;
             var newValue = parseInt(inputValue) + adj_btn_inc_dec;
